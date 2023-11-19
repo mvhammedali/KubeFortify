@@ -1,4 +1,4 @@
-# KubeFortify: Automated Resilience and Load Testing Framework for Kubernetes
+# KubeFortify
 
 KubeFortify is a tool designed to ensure the resilience and performance of applications deployed on Kubernetes. It integrates load testing, resilience testing, and automated recovery processes into a single framework, leveraging AI to analyze issues and recommend solutions. KubeFortify aims to enhance system reliability and operational efficiency.
 KubeFortify is tailored for organizations that rely on Kubernetes for application deployment and require an easy to use tool to maintain service quality and uptime. Its integrated approach to testing and recovery makes it a relevant tool in the toolkit of DevOps teams and site reliability engineers.
