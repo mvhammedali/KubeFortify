@@ -1,0 +1,9 @@
+static
+api_static
+env
+venv
+vitualenv
+**/__pycache__/**
+**/migrations/**
+.env
+config.txt
