@@ -15,15 +15,22 @@ def check_kubernetes_logs(pod_name, namespace):
         "info": [],  # Collect information that might indicate near-future problems
     }
 
-    patterns = {
-        "error": re.compile(r"error|exception|fatal", re.IGNORECASE),
-        "warning": re.compile(r"warning|deprecated|slow", re.IGNORECASE),
-        "info": re.compile(r"retrying|reconnecting|allocated", re.IGNORECASE),
-    }
+def check_pod_health(namespace):
+    # check if the pods are working properly
+    pods = v1.list_namespaced_pod(namespace)
+    first_pod = pods.items[0]
+    pod_name = first_pod.metadata.name
+    pod_status = v1.read_namespaced_pod(name=pod_name, namespace=namespace).status
 
     for line in logs.split("\n"):
         for level, pattern in patterns.items():
             if pattern.search(line):
                 issues[level].append(line)
+    for container in pod_status.container_statuses:
+        print(f"Container Name: {container.name}")
+        print(f"Restart count: {container.restart_count}")
+        if container.restart_count > 3:
+            return("Unhealthy pods detected:", [pod_name])
 
-    return issues
+        else:
+            return("Healthy pods!")
