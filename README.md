@@ -11,4 +11,6 @@ KubeFortify is tailored for organizations that rely on Kubernetes for applicatio
 5. **Email Notifications**: Sends detailed alerts and recovery actions to system administrators, keeping the operations team informed of the system status and automated interventions.
 
 
+A failed test will look o
+
 
