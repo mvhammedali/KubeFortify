@@ -3,9 +3,12 @@ from mailer import send_email, get_solution
 from handle_kube_logs import fetch_pod_logs
 import config as local_config
 import time
+import os
+from dotenv import load_dotenv
 
 config.load_kube_config()
 v1 = client.CoreV1Api()
+load_dotenv()
 
 
 def stop_all_pods(namespace="default"):
@@ -18,12 +21,9 @@ def stop_all_pods(namespace="default"):
             print(f"Failed to delete pod {pod.metadata.name}: {str(e)}")
 
 
-def resilience_test(namespace="default"):
+def resilience_test(namespace):
     print("Stopping all pods in the namespace.")
     stop_all_pods(namespace)
-
-    # delete_resource_quota(namespace)
-    # set_resource_constraints(namespace)
 
     print("Waiting for the system to stabilize...")
   
@@ -35,9 +35,7 @@ def resilience_test(namespace="default"):
         error_message=mes+"\n"+errors
         # print(error_message)
         detailed_solutions = get_solution(error_message)
-        # print(detailed_solutions)
         full_message = error_message + "\n\n" + "\n"+detailed_solutions
-        # print(full_message)
         send_email("Resilience Test Failure", full_message)
     else:
         send_email(
@@ -46,4 +44,4 @@ def resilience_test(namespace="default"):
         )
 
 if __name__ == "__main__":
-    resilience_test(local_config.NAMESPACE)
+    resilience_test(os.getenv('NAMESPACE'))
