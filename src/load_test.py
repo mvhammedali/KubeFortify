@@ -1,44 +1,75 @@
 from kubernetes import client, config
-from src.mailer import send_email, get_solution
-from src.handle_kube_logs import check_kubernetes_logs
+from mailer import send_email, get_solution
 import requests
+import config as env
+import os
+from dotenv import load_dotenv
+
+# Load the environment variables from .env file
+load_dotenv()
 
 config.load_kube_config()
 v1 = client.CoreV1Api()
 
 
-def send_request(url):
-    try:
-        response = requests.get(url)
-        print(f"Response Code: {response.status_code}, URL: {url}")
-    except Exception as e:
-        print(f"Error contacting {url}: {str(e)}")
+def send_requests(url, amount):
+
+    # Create a CoreV1Api client instance to interact with Kubernetes API
+    v1 = client.CoreV1Api()
+
+    with requests.Session() as session:
+        for _ in range(amount):
+            try:
+                response = session.get(url)
+                print(response.status_code)
+
+                if response.status_code != 200:
+                    # Assuming you're working within a specific namespace; otherwise adjust this
+                    namespace = 'default'
+                    # List all pods in the specified namespace
+                    pods = v1.list_namespaced_pod(namespace)
+
+                    if pods.items:
+                        # Get the first pod (make sure it's running if needed by checking status)
+                        first_pod = pods.items[0]
+                        # Get the logs of the first pod
+                        logs = v1.read_namespaced_pod_log(name=first_pod.metadata.name, namespace=namespace)
+                        print("Logs from the first pod:", first_pod.metadata.name)
+                        print(logs)
+                    else:
+                        print("No pods found in the namespace.")
+
+            except requests.exceptions.ConnectionError as e:
+                print("Failed to connect to the site. Stopping the test.")
+                break  # Stops the loop if the site is unreachable
+
+            except Exception as e:
+                print("An error occurred:", e)
+                break
 
 
-def load_test(url, num_requests=100):
-    for _ in range(num_requests):
-        try:
-            response = requests.get(url)
-            if response.status_code != 200:
-                print(f"Request failed with status code {response.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e}")
+url = os.getenv('LOAD_URL')  # put the url here
+amount = 1000  # Number of requests to send
 
 
-def main(url, namespace="default"):
+def main(url, namespace):
     print("Starting load test...")
-    load_test(url)
+
+    send_requests(url, amount)
+    pods = v1.list_namespaced_pod(namespace)
+    first_pod = pods.items[0]
+    pod_name = first_pod.metadata.name
+    pod_status = v1.read_namespaced_pod(name=pod_name, namespace=namespace).status.container_statuses
 
     print("Checking Kubernetes logs for errors...")
-    errors = check_kubernetes_logs(namespace)
+    errors = pod_status
+    print (errors)
     if errors:
         error_message = "Errors detected in Kubernetes logs during load testing:\n"
-        solutions = []
-        for pod, log in errors:
-            solution = get_solution(log)
-            solutions.append(f"Pod: {pod}, Error: {log}, Solution: {solution}")
-
-        full_message = error_message + "\n\n" + "\n\n".join(solutions)
+        
+        solution = get_solution(errors)
+           
+        full_message = error_message + "\n\n" + "\n"+solution
         print(full_message)
         send_email("Load Test Failure", full_message)
         print("Email with error details and solutions sent.")
@@ -50,4 +81,4 @@ def main(url, namespace="default"):
 
 
 if __name__ == "__main__":
-    main("http://your-application-url", "your-namespace")
+    main(os.getenv('LOAD_URL'), os.getenv('NAMESPACE'))
