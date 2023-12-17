@@ -1,5 +1,10 @@
 from kubernetes import client, config
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Initialize Kubernetes client
 config.load_kube_config()
 v1 = client.CoreV1Api()
@@ -16,7 +21,7 @@ def fetch_pod_logs(namespace):
         print("No pods found in the namespace.")
 
 def check_pod_errors():
-    log_error = fetch_pod_logs(namespace="default")    
+    log_error = fetch_pod_logs(namespace=os.getenv('NAMESPACE'))    
     if log_error:
         # If an error is found, extract the last 700 characters from the log
         print("Error found in logs:")
