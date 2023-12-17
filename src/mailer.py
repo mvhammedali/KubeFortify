@@ -1,37 +1,39 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from dotenv import load_dotenv
+import config
 import os
-import openai
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+
+client = OpenAI(api_key=os.getenv('OPENAI_KEY'))
 
 
 def get_solution(description):
-    openai.api_key = "your-openai-api-key"
-    response = openai.Completion.create(
-        engine="davinci",
-        prompt=f"Describe a problem and propose a detailed solution:\n\nProblem: {description}\n\nSolution:",
-        max_tokens=150,
-    )
+    response = client.completions.create(model="gpt-3.5-turbo-instruct",
+    prompt=f"Describe a problem and propose a detailed solution:\n\nProblem: {description}\n\nSolution:",
+    max_tokens=300)
     return response.choices[0].text.strip()
 
 
-# Email credentials
-EMAIL_USER = os.getenv("EMAIL_USER")
-EMAIL_PASS = os.getenv("EMAIL_PASS")
-SMTP_SERVER = os.getenv("SMTP_SERVER")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-
-
 # Send email function
-def send_email(subject, body, recipient):
+def send_email(subject, body):
     message = MIMEMultipart()
-    message["From"] = EMAIL_USER
-    message["To"] = recipient
-    message["Subject"] = subject
+    message['From'] = os.getenv('EMAIL_SENDER')
+    message['To'] = os.getenv('EMAIL_RECEIVER')
+    message['Subject'] = subject
     message.attach(MIMEText(body, "plain"))
 
-    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-        server.starttls()
-        server.login(EMAIL_USER, EMAIL_PASS)
-        server.send_message(message)
+    try:
+        with smtplib.SMTP(host=os.getenv('EMAIL_HOST'), port=os.getenv('EMAIL_PORT'), timeout=10) as server:  # Added timeout
+            server.starttls()  # Secure the connection
+            server.login(os.getenv('EMAIL_HOST_USER'), os.getenv('EMAIL_HOST_PASSWORD'))
+            server.send_message(message)
+            print("Email has been sent!")
+    except smtplib.SMTPException as e:
+        print(f"SMTP error occurred: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
