@@ -9,24 +9,23 @@ help:
 	@awk '/^[a-zA-Z_-]+:.*?## / {split($$0, N, ":.*?## "); printf "%-20s %s\n", N[1], N[2]}' $(MAKEFILE_LIST) | sort
 
 
-# Install Python dependencies needed for the tests
-install:
+install: ## Install Python dependencies needed for the tests
 	@echo "Installing Python packages..."
 	pip install -r src/requirements.txt
 
 
-# Run the load testing script
-load-test:
+
+load-test: ## Run the load testing script
 	@echo "Running load tests on the Kubernetes application..."
 	python src/load_test.py
 
-# Run the resilience testing script
-resilience-test:
+
+resilience-test: ## Run the resilience testing script
 	@echo "Running resilience tests on the Kubernetes application..."
 	python src/resilience_test.py
 
-# Clean up .pyc files and __pycache__ directories
-clean:
+
+clean: ## Clean up .pyc files and __pycache__ directories
 	@echo "Cleaning up Python bytecode..."
 	find . -type f -name '*.pyc' -delete
 	find . -type d -name '__pycache__' -exec rm -rf {} +
