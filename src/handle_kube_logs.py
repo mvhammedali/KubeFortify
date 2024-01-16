@@ -27,4 +27,3 @@ def check_kubernetes_logs(pod_name, namespace):
                 issues[level].append(line)
 
     return issues
-
