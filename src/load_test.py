@@ -12,6 +12,7 @@ v1 = client.CoreV1Api()
 
 
 def send_requests(url, amount):
+    # config.load_kube_config()  # Use load_incluster_config() if running inside a Kubernetes cluster
 
     # Create a CoreV1Api client instance to interact with Kubernetes API
     v1 = client.CoreV1Api()
@@ -24,7 +25,7 @@ def send_requests(url, amount):
 
                 if response.status_code != 200:
                     # Assuming you're working within a specific namespace; otherwise adjust this
-                    namespace = "default"
+                    namespace = os.getenv("NAMESPACE")
                     # List all pods in the specified namespace
                     pods = v1.list_namespaced_pod(namespace)
 
@@ -32,9 +33,7 @@ def send_requests(url, amount):
                         # Get the first pod (make sure it's running if needed by checking status)
                         first_pod = pods.items[0]
                         # Get the logs of the first pod
-                        logs = v1.read_namespaced_pod_log(
-                            name=first_pod.metadata.name, namespace=namespace
-                        )
+                        logs = v1.read_namespaced_pod_log(name=first_pod.metadata.name, namespace=namespace)
                         print("Logs from the first pod:", first_pod.metadata.name)
                         print(logs)
                     else:
@@ -60,19 +59,17 @@ def main(url, namespace):
     pods = v1.list_namespaced_pod(namespace)
     first_pod = pods.items[0]
     pod_name = first_pod.metadata.name
-    pod_status = v1.read_namespaced_pod(
-        name=pod_name, namespace=namespace
-    ).status.container_statuses
+    pod_status = v1.read_namespaced_pod(name=pod_name, namespace=namespace).status.container_statuses
 
     print("Checking Kubernetes logs for errors...")
     errors = pod_status
-    print(errors)
+    print (errors)
     if errors:
         error_message = "Errors detected in Kubernetes logs during load testing:\n"
-
+        
         solution = get_solution(errors)
-
-        full_message = error_message + "\n\n" + "\n" + solution
+           
+        full_message = error_message + "\n\n" + errors +"\n"+solution
         print(full_message)
         send_email("Load Test Failure", full_message)
         print("Email with error details and solutions sent.")
