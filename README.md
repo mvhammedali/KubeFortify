@@ -8,7 +8,7 @@ KubeFortify is tailored for organizations that rely on Kubernetes for applicatio
 2. **Resilience Testing**: Introduces faults into the system to assess the robustness and fault tolerance of the deployment, ensuring that the application can handle and recover from unexpected conditions.
 3. **Automated Recovery**: Monitors the deployment status post-failure and automatically attempts recovery actions if the system does not return to the desired state, ensuring minimal downtime.
 4. **AI-Driven Issue Resolution**: Utilizes OpenAI’s GPT to generate insights and practical solutions when problems are detected, enhancing the decision-making process during incident management.
-5. **Email Notifications**: Sends detailed alerts and recovery actions to system administrators, keeping the operations team informed of the system status and automated interventions.
+5. **Email Notifications**:  Send detailed alerts on the issue that occurred during the test and the solution gotten from GPT.
    
 ## How to use
 1. If you already have Python installed you can now install the requirements.
